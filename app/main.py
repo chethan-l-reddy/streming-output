@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-
-from asyncio import sleep
+import asyncio
 app = FastAPI()
 
 app.add_middleware(
@@ -22,8 +21,7 @@ put unnecessary load on server when there is no data to be sent whereas websocke
 async def waypoints_generator():
     for i in temp_text:
         yield i
-        if i == "\n":
-            await sleep(1)
+        await asyncio.sleep(0.03)
 
 
 @app.get("/get-waypoints")
