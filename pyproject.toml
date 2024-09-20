@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "straming-poc"
+version = "0.1.0"
+description = "poc for straming data"
+authors = ["chethan-l-reddy <chethan.reddy@pangeatech.net>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["all"], version = "^0.114.1"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
