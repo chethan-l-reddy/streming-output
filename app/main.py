@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
+import pydantic
 app = FastAPI()
 
 app.add_middleware(
@@ -12,21 +13,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-temp_text: str = '''
-Many times when we have a requirement to send continuous stream of data from sever to the client we have majorly three options available of \n
-which are pooling the data at the client side, web-sockets or server-sent events(SSE). Each one of them have its own pros & cons. Pooling \n
-put unnecessary load on server when there is no data to be sent whereas websockets can be harder to scale & at the same time SSE is unidirec
-'''
+class Query(pydantic.BaseModel):
+    query: str
 
-async def waypoints_generator():
-    for i in temp_text:
+
+async def waypoints_generator(query : str):
+    for i in query:
         yield i
         await asyncio.sleep(0.03)
 
 
-@app.get("/get-waypoints")
-async def root():
-    return StreamingResponse(waypoints_generator(), media_type="text/event-stream")
+@app.post("/get-waypoints")
+async def root(payload : Query):
+    return StreamingResponse(waypoints_generator(payload.query), media_type="text/event-stream")
 
 
 
