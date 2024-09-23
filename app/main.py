@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 import asyncio
 import pydantic
+import requests
+import json
 app = FastAPI()
 
 app.add_middleware(
@@ -14,22 +16,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Query(pydantic.BaseModel):
     query: str
 
-straming_data : str = "Amidst the bustling chaos of city life, where the cacophony of honking horns and the rhythmic clatter of footsteps create a vibrant backdrop, there exists a hidden world of stories waiting to be discovered. Each person rushing by carries with them a unique narrative, woven from dreams, struggles, and triumphs that often go unnoticed in the fast-paced rush of modern existence. Street vendors call out their wares, the aroma of freshly baked bread mingling with the sharp scent of roasted coffee, tempting passersby to pause for just a moment. Artists paint vibrant murals on weathered walls, transforming mundane spaces into visual feasts that inspire conversation and provoke thought. In small cafes, friends gather to share laughter and secrets, while strangers exchange fleeting glances, each interaction a potential spark of connection in the tapestry of urban life. As the sun sets, casting a warm glow over the skyline, the city begins to pulse with an energy all its own, where nightlife awakens and possibilities unfold like petals in bloom. It’s in these moments, between the noise and the silence, that the heart of the city truly reveals itself, reminding us of the beauty and complexity that lies beneath the surface."
 
-async def waypoints_generator():
-    for i in straming_data.split(" "):
+token: str = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLnR1cnRsZW1vdmVzLmFpIiwgInN1YiI6ICJQYW5nZWEgSW50ZXJuYWwgQXV0aCIsICJhdWQiOiAicGFuZ2VhLW1hc3RlciIsICJhcHAiOiAicGFuZ2VhX21haW4iLCAianRpIjogIjY2ZWFhOGYxMTQ1ZjY2YWE1NjAzMWYwNSIsICJleHAiOiAxNzI5NjY0NDk1LjYzMDc2OSwgImlhdCI6IDE3MjcwNzI0OTUuNjMwNzY5LCAic2NvcGUiOiBbImFkbWluIl19.0779a6a9b396cc37beb826507ef433acc3c22b2cf3334e86189248bee9f3d94d"
+
+
+def responseFromAira(query: str):
+    url = "https://ca-aira-backend-temp-eastus.ambitiouswave-dd67970c.eastus.azurecontainerapps.io/aira-api/v1/chat"
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {
+        "ask_openai": False,
+        "query": "what is the university name?",
+        "regenerate_count": 0,
+        "user_id": "66eaa8f1145f66aa56031f05",
+    }
+    resp = requests.post(url=url, headers=headers, data=json.dumps(payload))
+    url_response = resp.json()
+    for i in url_response["answer"]:
         yield i
-        await asyncio.sleep(1)
+        asyncio.sleep(0.04)
 
 
-@app.get("/get-waypoints")
-async def root():
-    return StreamingResponse(waypoints_generator(), media_type="text/event-stream")
 
-@app.get("/response")
-async def get():
-    return EventSourceResponse(waypoints_generator())
-
+@app.post("/response")
+async def get(payload: Query):
+    return EventSourceResponse(responseFromAira(query=payload.query))
